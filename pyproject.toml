@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "pupfinder"
+version = "0.1.0"
+description = ""
+authors = ["Karolina-Bogacka <karolina.bogacka@skygate.io>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+fastapi = "^0.63.0"
+jinja2 = "^2.11.2"
+aiofiles = "^0.6.0"
+sqlalchemy = "^1.3.22"
+PyMySQL = "^0.10.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
