@@ -7,6 +7,7 @@
 
 <script>
 import axios from "axios";
+
 var newInfo = ";"
 axios.get('http://localhost:8000/').then(response => (newInfo = response.data));
 export default {

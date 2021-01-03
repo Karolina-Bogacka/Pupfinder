@@ -6,12 +6,23 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@vue-leaflet/vue-leaflet": "^0.5.0",
     "axios": "^0.21.1",
-    "vue": "^3.0.4",
-    "vue-axios": "^3.2.0"
+    "leaflet": "^1.7.1",
+    "nodejs": "0.0.0",
+    "primeicons": "^4.1.0",
+    "primevue": "^3.1.1",
+    "vue": "^3.0.5",
+    "vue-axios": "^3.2.1",
+    "vue-upload-component": "^3.0.46"
   },
   "devDependencies": {
-    "vite": "^1.0.0-rc.13",
-    "@vue/compiler-sfc": "^3.0.4"
+    "@tailwindcss/postcss7-compat": "^2.0.2",
+    "@vue/compiler-sfc": "^3.0.5",
+    "autoprefixer": "^9.8.6",
+    "postcss": "^7.0.35",
+    "sass": "^1.32.0",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.2",
+    "vite": "^1.0.0-rc.13"
   }
 }
