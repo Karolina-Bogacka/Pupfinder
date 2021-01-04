@@ -43,9 +43,11 @@ name: "Form",
        return
      } else {
        const formData = new FormData();
-      for (const i of Object.keys(this.files)) {
-        formData.append('files', this.files[i])
-      }
+       if(this.files) {
+         for (const i of Object.keys(this.files)) {
+           formData.append('files', this.files[i])
+         }
+       }
           /*axios.post('http://localhost:3000/api/file-upload', formData, {
           }).then((res) => {
             console.log(res)

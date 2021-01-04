@@ -1,6 +1,20 @@
 <template>
   <div style="height: 75vh; width: 50vw;">
+    <div class="map">
+    <l-map style="width:100%; height: 100%" :zoom="zoom" :center="locCenter">
+      <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
+      <l-circle-marker v-for="marker in markers" :key="marker.id"
+          :lat-lng="marker.location"
+          :radius="marker.radius"
+          :color="marker.color"
+          :fillColor="marker.fillColor"
+          :fillOpacity="marker.fillOpacity"
+      />
+    </l-map>
+    <button @click="addMarker">Add one</button>
+    <button @click="deleteMarker" :disabled="markers.length == 0">Delete first</button>
     <div id="mapDiv">
+    </div>
     </div>
     <div class="ui right icon">
               <input
@@ -34,8 +48,6 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import axios from 'axios'
 import Form from "../Form/Form.vue";
-
-var locCenter = locCenter || [52.237049, 21.017532];
 export default {
   components: {
     Form,
@@ -54,15 +66,14 @@ export default {
     return {
       zoom: 2,
       address: this.address,
-     center: locCenter,
+     center: this.locCenter,
+      markers: [
+      ]
     };
   },
   computed: {
-    centerPlace(){
-      return locCenter;
-    },
     showComponent(){
-      return false;
+      return true;
     }
   },
   methods: {
@@ -72,6 +83,7 @@ export default {
     onCenter(newCenter){
       console.log(this.mapDiv);
       this.mapDiv.panTo(newCenter);
+      this.getDogsInArea();
     },
     setupLeafletMap() {
       console.log(this.$center);
@@ -84,6 +96,7 @@ export default {
                 '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
           }
       ).addTo(this.mapDiv);
+      this.getDogsInArea();
     },
     onEachFeature(feature, layer) {
       if (feature.properties && feature.properties.name) {
@@ -98,16 +111,16 @@ export default {
             position => {
               console.log(position.coords.latitude);
               console.log(position.coords.longitude);
-              locCenter = [position.coords.latitude, position.coords.longitude];
-              this.onCenter(locCenter);
+              this.locCenter = [position.coords.latitude, position.coords.longitude];
+              this.onCenter(this.locCenter);
             },
             error => {
               console.log(error.message);
             },
         )
       } else {
-        locCenter = await this.getStreetAddressFrom(this.address);
-        this.onCenter(locCenter);
+        this.locCenter = await this.getStreetAddressFrom(this.address);
+        this.onCenter(this.locCenter);
       }
     },
     async getStreetAddressFrom(text) {
@@ -127,7 +140,7 @@ export default {
     async addReport(report){
       try{
         report['status'] = 'HOMELESS';
-        report['location'] = locCenter;
+        report['location'] = this.locCenter;
         var reportStringified = JSON.stringify(report);
         console.log(reportStringified);
         var {data} = axios.post('http://localhost:8000/api/dogs/', reportStringified, {headers: {
@@ -138,42 +151,47 @@ export default {
         console.log(error.message);
       }
     },
-    async getDogsInArea(){
-      try{
-        var {data} = axios.get('http://localhost:8000/api/dogs/',
-            {params: {latitude: locCenter[0], longitude: locCenter[1]}}).then(function (response) {
-            console.log(response.data.dogs);
-            return response.data.dogs;
+    placePupups(dogs) {
+        this.dogsInArea = dogs;
+        if (this.dogsInArea) {
+        var i = 0;
+        console.log(this.dogsInArea);
+        for (i; i < this.dogsInArea.length; i++) {
+          console.log(this.dogsInArea[i]);
+          var markerOptions = {
+            title: "this.dogsInArea[i][0]['dog_id']",
+            clickable: true,
+            draggable: false
+          }
+          var place = [this.dogsInArea[i][1].latitude, this.dogsInArea[i][1].longitude];
+          marker = L.marker(place, markerOptions);
+          this.markers.push(place);
+          console.log(marker);
+          marker.addTo(this.mapDiv).on('mouseover', function (e) {
+            console.log(e);
           });
-      }catch(error){
+      }}
+    },
+    async getDogsInArea() {
+      try {
+        var response = await axios.get('http://localhost:8000/api/dogs/',
+            {params: {latitude: this.locCenter[0], longitude: this.locCenter[1]}});
+        this.placePupups(response.data.dogs);
+      } catch (error) {
         console.log(error.message);
       }
     },
-    async placePupups(){
-      this.dogsInArea = await getDogsInArea();
-      for(i = 0; i < this.dogsInArea.length; i++){
-        var markerOptions = {
-            title: this.dogsInArea[i]['dog_id'],
-            clickable: true,
-            draggable: false
-        }
-        marker = L.marker(e.latlng, markerOptions);
-        console.log(marker);
-        marker.addTo(map).on('mouseover', function(e) {
-        console.log(e);
-        if(e.originalEvent.ctrlKey){
-          deletePoint(e.target.options.title, map);
-        }
-    });
-      }
-    }
   },
   mounted(){
+    if(typeof(this.locCenter) == "undefined") {
+      this.locCenter = [52.237049, 21.017532];
+  }
    this.setupLeafletMap();
-   locCenter = locCenter || [52.237049, 21.017532];
    this.address = this.address || "";
-   this.getDogsInArea();
    var dogsInArea = [];
+   this.url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+   this.attribution = '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+   this.zoom=20;
   }
 };
 </script>
