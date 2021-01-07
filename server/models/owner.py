@@ -8,13 +8,11 @@ from schemas.owner import OwnerStatus
 class Owner(Base):
     __tablename__ = "owners"
     owner_id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True)
-    password = Column(String)
+    email = Column(String(100), unique=True)
+    password = Column(String(100))
     latitude = Column(Float)
     longitude = Column(Float)
-    address = Column(String)
+    address = Column(String(200))
 
-    dogs = relationship("Dog", back_populates="owner_id")
-
-    description = Column(String, nullable=False)
-    status = Column(OwnerStatus, nullable=False)
+    description = Column(String(200), nullable=False)
+    status = Column(String(100), nullable=False)

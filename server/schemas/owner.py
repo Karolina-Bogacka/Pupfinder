@@ -4,7 +4,7 @@ from typing import Tuple, List
 from fastapi import Form
 from pydantic import BaseModel
 
-from schemas.dog import Dog
+from schemas.dogschema import DogSchema
 
 
 class OwnerStatus(Enum):
@@ -22,14 +22,14 @@ class OwnerCreate(OwnerBase):
     password: str
 
 
-class Owner(OwnerBase):
+class OwnerSchema(OwnerBase):
     owner_id: int = None
     longitude: float = None
     latitude: float = None
     address: str = None
     description: str = None
     status: OwnerStatus = None
-    dogs: List[Dog] = None
+    dogs: List[DogSchema] = None
 
     class Config:
         orm_mode = True
@@ -43,7 +43,7 @@ class Owner(OwnerBase):
             latitude: float = Form(None),
             description: str = Form(None),
             status: OwnerStatus = Form(None),
-            dogs: List[Dog] = Form(None)
+            dogs: List[DogSchema] = Form(None)
     ):
         return cls(
             owner_id = owner_id_,

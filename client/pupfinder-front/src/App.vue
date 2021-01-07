@@ -1,19 +1,22 @@
 <template>
   <div>
-  <img alt="Pupfinder logo" src="./assets/PUPFINDER.png" />
-    <Body/>
+    <router-view/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-import Body from './components/Body/Body.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld,
-    Body
   }
 }
 </script>
+
+<style>
+body {
+  background-image: url("./assets/PUPFINDER.png");
+  background-color: #247510;
+  background-repeat: no-repeat;
+}
+</style>

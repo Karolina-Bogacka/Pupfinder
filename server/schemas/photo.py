@@ -2,10 +2,13 @@ from fastapi import Form
 from pydantic import BaseModel
 
 
-class Photo(BaseModel):
+class PhotoSchema(BaseModel):
     photo_id: int = None
     subject_id: int = None
     photo_url: str = None
+
+    class Config:
+        orm_mode=True
 
     @classmethod
     def as_form(

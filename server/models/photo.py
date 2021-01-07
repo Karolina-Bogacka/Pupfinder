@@ -1,13 +1,13 @@
-from tokenize import String
 
-from sqlalchemy import Column, Integer, ForeignKey, Float
+from sqlalchemy import Column, Integer, ForeignKey, Float, String
 from sqlalchemy.orm import relationship
 
 from models import Base
 
 
 class Photo(Base):
+    __tablename__ = "photos"
     photo_id = Column(Integer, primary_key=True, index=True)
+    subject = relationship("Dog", backref="photos")
     subject_id = Column(Integer, ForeignKey("dogs.dog_id"))
-    subject = relationship("Dog", back_populates="photos")
-    photo_url = Column(String, nullable=False)
+    photo_url = Column(String(200), nullable=False)

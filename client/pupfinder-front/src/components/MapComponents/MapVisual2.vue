@@ -1,20 +1,6 @@
 <template>
   <div style="height: 75vh; width: 50vw;">
-    <div class="map">
-    <l-map style="width:100%; height: 100%" :zoom="zoom" :center="locCenter">
-      <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
-      <l-circle-marker v-for="marker in markers" :key="marker.id"
-          :lat-lng="marker.location"
-          :radius="marker.radius"
-          :color="marker.color"
-          :fillColor="marker.fillColor"
-          :fillOpacity="marker.fillOpacity"
-      />
-    </l-map>
-    <button @click="addMarker">Add one</button>
-    <button @click="deleteMarker" :disabled="markers.length == 0">Delete first</button>
     <div id="mapDiv">
-    </div>
     </div>
     <div class="ui right icon">
               <input
@@ -25,6 +11,7 @@
               />
               <button @click="locatorButtonPressed"></button>
     </div>
+    <button @click="pushRoute"></button>
 
     <Form v-if="showComponent" @report-submitted="addReport"></Form>
   </div>
@@ -48,6 +35,29 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import axios from 'axios'
 import Form from "../Form/Form.vue";
+
+const myCustomColour = '#247510'
+
+const markerHtmlStyles = `
+  background-color: ${myCustomColour};
+  width: 3rem;
+  height: 3rem;
+  display: block;
+  left: -1.5rem;
+  top: -1.5rem;
+  position: relative;
+  border-radius: 3rem 3rem 0;
+  transform: rotate(45deg);
+  border: 1px solid #FFFFFF`
+
+const icon = L.divIcon({
+  className: "my-custom-pin",
+  iconAnchor: [0, 24],
+  labelAnchor: [-6, 0],
+  popupAnchor: [0, -36],
+  html: `<span style="${markerHtmlStyles}" />`
+})
+
 export default {
   components: {
     Form,
@@ -66,9 +76,7 @@ export default {
     return {
       zoom: 2,
       address: this.address,
-     center: this.locCenter,
-      markers: [
-      ]
+     center: this.locCenter
     };
   },
   computed: {
@@ -77,14 +85,6 @@ export default {
     }
   },
   methods: {
-    log(a) {
-      console.log(a);
-    },
-    onCenter(newCenter){
-      console.log(this.mapDiv);
-      this.mapDiv.panTo(newCenter);
-      this.getDogsInArea();
-    },
     setupLeafletMap() {
       console.log(this.$center);
       this.mapDiv = L.map("mapDiv").setView(this.$center, 13);
@@ -97,14 +97,12 @@ export default {
           }
       ).addTo(this.mapDiv);
       this.getDogsInArea();
+      this.mapDiv.on("click", function (e) {
+        this.locCenter = [e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5)]
+        console.log(this.locCenter);
+        }
+      )
     },
-    onEachFeature(feature, layer) {
-      if (feature.properties && feature.properties.name) {
-        layer.bindPopup(feature.properties.name);
-    layer.on('mouseover', () => { layer.openPopup(); });
-        layer.on('mouseout', () => { layer.closePopup(); });
-      }
-   },
     async locatorButtonPressed() {
       if (this.address === "" || !this.address) {
         navigator.geolocation.getCurrentPosition(
@@ -137,6 +135,18 @@ export default {
         console.log(error.message);
       }
     },
+    async getFromCenter(latitude, longitude) {
+      try {
+        var {data} = await axios.get(
+            "https://api.geoapify.com/v1/geocode/reverse?", {params: {lat:latitude, lon:longitude, api_key:'5caffdbbde8941d48cddb778ded141f7', limit:'1' }});
+      } catch (error) {
+        console.log(error.message);
+      }
+    },
+    pushRoute: function () {
+      this.$router.push({name: "ReportPuppy",
+        params: {address: this.address, center: this.locCenter}});
+    },
     async addReport(report){
       try{
         report['status'] = 'HOMELESS';
@@ -155,20 +165,17 @@ export default {
         this.dogsInArea = dogs;
         if (this.dogsInArea) {
         var i = 0;
-        console.log(this.dogsInArea);
         for (i; i < this.dogsInArea.length; i++) {
-          console.log(this.dogsInArea[i]);
           var markerOptions = {
-            title: "this.dogsInArea[i][0]['dog_id']",
+            title: this.dogsInArea[i][0]['dog_id'],
+            icon: icon,
             clickable: true,
             draggable: false
           }
           var place = [this.dogsInArea[i][1].latitude, this.dogsInArea[i][1].longitude];
-          marker = L.marker(place, markerOptions);
-          this.markers.push(place);
-          console.log(marker);
-          marker.addTo(this.mapDiv).on('mouseover', function (e) {
-            console.log(e);
+          var markerS = L.marker(place, markerOptions);
+          markerS.addTo(this.mapDiv).on('mouseover', function (e) {
+            this.dog_id = parseInt(e.target.options.title);
           });
       }}
     },
@@ -181,6 +188,11 @@ export default {
         console.log(error.message);
       }
     },
+    onCenter(newCenter){
+      console.log(this.mapDiv);
+      this.mapDiv.panTo(newCenter);
+      this.getDogsInArea();
+    },
   },
   mounted(){
     if(typeof(this.locCenter) == "undefined") {
@@ -189,6 +201,7 @@ export default {
    this.setupLeafletMap();
    this.address = this.address || "";
    var dogsInArea = [];
+   this.dog_id = 5;
    this.url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
    this.attribution = '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
    this.zoom=20;

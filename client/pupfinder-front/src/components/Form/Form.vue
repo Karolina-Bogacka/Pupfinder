@@ -11,11 +11,7 @@
     <label for="description">Description:</label>
     <textarea id="description" v-model="description"></textarea><br/>
     <div class="form-group">
-      <input type="file" @change="uploadFile" multiple>
-    </div>
-
-    <div class="form-group">
-      <button class="btn btn-success btn-block btn-lg">Upload</button>
+      <input type="file" @change="uploadFile">
     </div>
     <input class="button" type="submit" value="Submit">
 </form>
@@ -23,54 +19,91 @@
   </template>
 
 <script>
+import axios from "axios";
+
 export default {
 name: "Form",
+  props:{
+    address: String,
+    center: Float64Array
+  },
   data(){
   return {
     breed: '',
     chip_number: null,
     description: "",
-    files: null
+    file: null
   }
   },
   methods: {
     uploadFile (event) {
-        this.files = event.target.files
+        this.file = event.target.files[0];
     },
-   onSubmit() {
+   async onSubmit() {
      if (this.breed === '' && this.description === '' && this.chip_number === null) {
-       alert('Review is incomplete. Please fill out every field.')
+       alert('Review is incomplete. Please fill out every field.');
        return
      } else {
-       const formData = new FormData();
-       if(this.files) {
-         for (const i of Object.keys(this.files)) {
-           formData.append('files', this.files[i])
-         }
+       var data = new FormData();
+       if(this.file) {
+         data.append('file', this.file);
        }
-          /*axios.post('http://localhost:3000/api/file-upload', formData, {
-          }).then((res) => {
-            console.log(res)
-          })*/
        var dogReport = {
          breed: this.breed,
          chip_number: this.chip_number,
          description: this.description,
        }
        console.log(dogReport);
-       this.$emit('report-submitted', dogReport)
+       this.sendImageToServer(data).then((response =>{
+         dogReport['url'] = response;
+         this.addReport(dogReport);
+       }))
 
-       this.breed = ''
-       this.chip_number = null
-       this.description = ''
+       this.breed = '';
+       this.chip_number = null;
+       this.description = '';
      }
-   }
- }
+   },
+    async sendImageToServer(data){
+      try {
+        console.log(data);
+        var response = await axios.post('http://localhost:8000/api/photo-upload/', data,
+            {headers:{
+              'Content-Type': 'multipart/form-data'
+            }});
+        console.log(response.data['file_name']);
+        return response.data['file_name'];
+
+      } catch (error) {
+        console.log(error.message);
+      }
+
+    },
+    async addReport(report){
+      try{
+        console.log(this.center);
+        report['status'] = 'HOMELESS';
+        report['location'] = this.center;
+        var reportStringified = JSON.stringify(report);
+        console.log(reportStringified);
+        var {data} = axios.post('http://localhost:8000/api/dogs/', reportStringified, {headers: {
+    'Content-Type': 'application/json'}}).then(function (response) {
+            console.log(response);
+          });
+      } catch(error){
+        console.log(error.message);
+      }
+    }
+ },
+  mounted(){
+    console.log(this.center);
+  }
 }
 </script>
 
 <style scoped>
-.container {
+form {
   max-width: 600px;
+  background-color: orange;
 }
 </style>
