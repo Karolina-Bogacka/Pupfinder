@@ -11,11 +11,11 @@ export default {
   components: {
   }
 }
+//background-image: url("./assets/PUPFINDER.png");
 </script>
 
 <style>
 body {
-  background-image: url("./assets/PUPFINDER.png");
   background-color: #247510;
   background-repeat: no-repeat;
 }

@@ -1,19 +1,23 @@
 <template>
-  <div>
-<form class="report-dog-form" @submit.prevent="onSubmit">
-    <h3>Report a homeless dog in the neighborhood</h3>
-    <label for="breed">Breed:</label>
-    <input id="breed" v-model="breed"/><br/>
-
-    <label for="chip_number">Chip number:</label>
-    <input id="chip_number" v-model="chip_number"/><br/>
-
-    <label for="description">Description:</label>
-    <textarea id="description" v-model="description"></textarea><br/>
+  <div class="grid max-h-screen place-items-center">
+<form  @submit.prevent="onSubmit" class="w-11/12 p-12 bg-white sm:w-8/12 md:w-1/2 lg:w-5/12">
+  <h1 class="text-xl font-semibold">Hello there 👋, <span class="font-normal">please fill in the dog report</span></h1>
+  <div class="flex justify-between gap-3">
+  <span class="w-1/2">
+    <label for="breed" class="block text-xs font-semibold text-gray-600 uppercase">Breed:</label>
+    <input id="breed" placeholder="Unknown" v-model="breed" class="block w-full p-3 mt-2 text-grey-500 bg-yellow-200 appearance-none focus:outline-none focus:bg-yellow-300 focus:shadow-inner"/>
+    </span>
+  <span class="w-1/2">
+    <label for="chip_number" class="block text-xs font-semibold text-gray-600 uppercase">Chip number:</label>
+    <input id="chip_number" placeholder="000000000000000" v-model="chip_number" class="block w-full p-3 mt-2 text-grey-500 bg-yellow-200 appearance-none focus:outline-none focus:bg-yellow-300 focus:shadow-inner"/>
+</span>
+  </div>
+    <label for="description" class="block mt-2 text-xs font-semibold text-gray-600 uppercase">Description:</label>
+    <textarea id="description" placeholder="A very good dog" class="block w-full p-3 mt-2 text-gray-700 bg-yellow-200 appearance-none focus:outline-none focus:bg-yellow-300 focus:shadow-inner" v-model="description"></textarea><br/>
     <div class="form-group">
-      <input type="file" @change="uploadFile">
+      <input type="file" class="bg-yellow-200 hover:bg-yellow-300 text-white font-bold py-3 px-6 rounded" @change="uploadFile"/>
     </div>
-    <input class="button" type="submit" value="Submit">
+    <input type="submit" value="Submit" class="w-full py-3 mt-6 font-medium tracking-widest text-white uppercase bg-green shadow-lg focus:outline-none hover:bg-green-800 hover:shadow-none">
 </form>
   </div>
   </template>
@@ -55,12 +59,19 @@ name: "Form",
          chip_number: this.chip_number,
          description: this.description,
        }
-       console.log(dogReport);
-       this.sendImageToServer(data).then((response =>{
-         dogReport['url'] = response;
+       console.log(data.entries().next().done);
+       if(data.entries().next().done){
          this.addReport(dogReport).then((response => {
-           this.$router.push({name: "LocalMap", params: {address: this.address, center: this.center}})}));
-       }));
+             this.$router.push({name: "LocalMap", params: {address: this.address, center: this.center}})
+           }));
+       }else {
+         this.sendImageToServer(data).then((response => {
+           dogReport['url'] = response;
+           this.addReport(dogReport).then((response => {
+             this.$router.push({name: "LocalMap", params: {address: this.address, center: this.center}})
+           }));
+         }));
+       }
 
        this.breed = '';
        this.chip_number = null;
@@ -108,6 +119,5 @@ name: "Form",
 <style scoped>
 form {
   max-width: 600px;
-  background-color: orange;
 }
 </style>

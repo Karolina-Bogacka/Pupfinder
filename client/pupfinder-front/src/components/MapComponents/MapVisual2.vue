@@ -1,17 +1,34 @@
 <template>
-  <div style="height: 75vh; width: 50vw;">
-    <div id="mapDiv">
-    </div>
+  <div class="MapContainer">
+    <fieldset>
+      <h3></h3>
+    <div style="height: 80vh">
+    <LMap  class="map" @ready="onReady" @locationfound="onLocationFound"  @click="changeCenter" :zoom="zoom" :center="center">
+      <LTileLayer :url="url"></LTileLayer>
+
+      <ul>
+        <li v-for="dog in dogsInArea" :key="dog.dog_id">
+            <LMarker :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:mouseover="showPup(dog)"></LMarker>
+        </li>
+      </ul>
+
+
+    </LMap>
+
+  </div>
     <div class="ui right icon">
               <input
                 type="text"
                 placeholder="Enter the address of your search"
                 v-model="address"
                 ref="autocomplete"
+                @keypress.enter="locatorButtonPressed"
+                class="input border border-gray-400 appearance-none rounded w-full px-3 py-3 pt-5 pb-2 focus focus:border-indigo-600 focus:outline-none active:outline-none active:border-indigo-600"
               />
-              <button @click="locatorButtonPressed"></button>
+              <button @click="locatorButtonPressed" class="bg-blue-500 text-white font-bold rounded">Go to location</button>
     </div>
-    <button @click="pushRoute"></button>
+    <button @click="pushRoute" class="bg-blue-500 text-white font-bold rounded">Report a lost pupper</button>
+    </fieldset>
   </div>
 </template>
 <script>
@@ -70,9 +87,10 @@ export default {
   },
   data() {
     return {
-      zoom: 2,
+      zoom: 15,
       address: this.address,
-     center: [52.237049, 21.017532]
+      center: [52.237049, 21.017532],
+      dogsInArea: {}
     };
   },
   computed: {
@@ -81,23 +99,22 @@ export default {
     }
   },
   methods: {
-    setupLeafletMap() {
-      console.log(this.config.globalProperties.$center);
-      this.mapDiv = L.map("mapDiv").setView(this.config.globalProperties.$center, 13);
-      L.tileLayer(
-          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          {
-            maxZoom: 20,
-            attribution:
-                '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
-          }
-      ).addTo(this.mapDiv);
-      this.getDogsInArea();
-      this.mapDiv.on("click", function (e) {
-        app.config.globalProperties.$center = [e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5)];
-        console.log(app.config.globalProperties.$center);
-        }
-      )
+    onReady (mapObject) {
+      mapObject.locate();
+    },
+      onLocationFound(location){
+      console.log(location);
+    },
+    changeCenter(e){
+      console.log(e);
+      if(typeof(e.latlng)!=="undefined") {
+        this.center = [e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5)];
+        this.getDogsInArea([e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5)]);
+      }
+      },
+    showPup(dog){
+      this.dog_id = parseInt(dog.id);
+      console.log(dog);
     },
     async locatorButtonPressed() {
       if (this.address === "" || !this.address) {
@@ -105,16 +122,16 @@ export default {
             position => {
               console.log(position.coords.latitude);
               console.log(position.coords.longitude);
-              app.config.globalProperties.$center = [position.coords.latitude, position.coords.longitude];
-              this.onCenter(app.config.globalProperties.$center);
+              this.center = [position.coords.latitude, position.coords.longitude];
+              this.onCenter(this.center);
             },
             error => {
               console.log(error.message);
             },
         )
       } else {
-        app.config.globalProperties.$center = await this.getStreetAddressFrom(this.address);
-        this.onCenter(app.config.globalProperties.$center);
+        this.center = await this.getStreetAddressFrom(this.address);
+        this.onCenter(this.center);
       }
     },
     async getStreetAddressFrom(text) {
@@ -142,55 +159,47 @@ export default {
     pushRoute: function () {
       this.$router.push({
         name: "ReportPuppy",
-        params: {address: this.address, center: app.config.globalProperties.$center}
+        params: {address: this.address, center: this.center}
       });
     },
     placePupups(dogs) {
-        this.dogsInArea = dogs;
-        if (this.dogsInArea) {
+        if (dogs) {
+          console.log(dogs);
         var i = 0;
-        for (i; i < this.dogsInArea.length; i++) {
+        for (i; i < dogs.length; i++) {
           var markerOptions = {
-            title: this.dogsInArea[i][0]['dog_id'],
+            title: dogs[i][0]['dog_id'],
             icon: icon,
             clickable: true,
             draggable: false
           }
-          var place = [this.dogsInArea[i][1].latitude, this.dogsInArea[i][1].longitude];
-          var markerS = L.marker(place, markerOptions);
-          markerS.addTo(this.mapDiv).on('mouseover', function (e) {
-            this.dog_id = parseInt(e.target.options.title);
-          });
+          var id = dogs[i][0]['dog_id'];
+          var place = [dogs[i][1].latitude, dogs[i][1].longitude];
+          this.dogsInArea[dogs[i][0]['dog_id']] = {options: markerOptions, place: place, id:id};
       }}
     },
-    async getDogsInArea() {
+    async getDogsInArea(center) {
       try {
-        console.log(app.config.globalProperties.$center);
         var response = await axios.get('http://localhost:8000/api/dogs/',
-            {params: {latitude: app.config.globalProperties.$center[0],
-                longitude: app.config.globalProperties.$center[1]}});
+            {params: {latitude: center[0],
+                longitude: center[1]}});
         this.placePupups(response.data.dogs);
       } catch (error) {
         console.log(error.message);
       }
     },
     onCenter(newCenter){
-      console.log(this.mapDiv);
-      this.mapDiv.panTo(newCenter);
-      this.getDogsInArea();
+      this.center = newCenter;
+      this.getDogsInArea(newCenter);
     },
   },
-  mounted(){
-    if(typeof(this.$route.params.center)!="undefined"){
-      app.config.globalProperties.$center = this.$route.params.center;
+  created(){
+    if(typeof(this.$route.params.center) != "undefined"){
+      this.center = this.$route.params.center;
       this.address = this.$route.params.address;
     }
-    /*if(typeof(app.config.globalProperties.$center) == "undefined") {
-      app.config.globalProperties.$center = [52.237049, 21.017532];
-  }*/
-   this.setupLeafletMap();
+   this.getDogsInArea(this.center);
    this.address = this.address || "";
-   var dogsInArea = [];
    this.dog_id = 5;
    this.url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
    this.attribution = '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
@@ -205,9 +214,7 @@ export default {
  height: 80vh;
 }
 button{
-  width: 5vh;
   height: 5vh;
-  color: darkolivegreen;
   background-color:green;
 }
 </style>

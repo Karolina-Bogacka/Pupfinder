@@ -12,3 +12,110 @@
   color: #2c3e50;
   margin-top: 60px;
 }
+body {
+  background-color: #fbfbfb;
+  font-family: Arial;
+  font-size: small;
+}
+
+
+LMap {
+  height: 50em;
+  z-index: 0;
+}
+
+.highlight {
+  color: red;
+}
+
+caption {
+  color: #f38181;
+  text-align: center;
+  font-size: 2.5em;
+  font-family: "Ranchers", cursive;
+  margin: 0.01em auto 0.01em auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 60%;
+  margin: 2em auto 2em auto;
+  position: relative;
+}
+
+table td,
+table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+table tr:hover {
+  background-color: #ddd;
+}
+
+table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  color: white;
+}
+
+.MapContainer {
+  min-height: 50em;
+  width: 60%;
+  margin: 0px auto 0px auto;
+  position: relative;
+}
+
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  width: 60%;
+  margin: 2em auto 2em auto;
+}
+
+fieldset {
+  margin: 0px auto 0px auto;
+  border-color: lightgrey;
+  background: #ffffff;
+}
+
+label {
+  font-weight: bold;
+}
+
+button {
+  margin: 0.5em auto 0.5em auto;
+  width: 10em;
+  height: 3em;
+  font-size: 2em;
+  font-weight: bold;
+}
+
+h1 {
+  color: orange;
+  border-color: palegreen;
+  text-align: center;
+  font-size: 3.5em;
+  font-family: "Courier";
+  margin: 0.01em auto 0.01em auto;
+}
+
+
+@media only screen and (max-width: 1399px) {
+  .MapContainer {
+    width: 100%;
+    margin: 0px auto 0px auto;
+  }
+
+  table {
+    width: 100%;
+  }
+}
+

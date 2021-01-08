@@ -46,11 +46,9 @@ async def read_item(request: Request, id: str):
 @app.get("/api/dogs/")
 async def get_in_location(latitude: float, longitude: float):
     db = next(get_db())
-    dogs = db.query(Dog, Sighting).join(Dog.sightings, aliased=True).all()
+    dogs = db.query(Dog, Sighting).filter(Dog.dog_id == Sighting.dog_id).all()
     return_dogs = [dog for dog in dogs if abs(dog[1].latitude - latitude) < 1]
-    print(dogs)
-    return_dogs_next = [dog for dog in return_dogs if abs(dog[1].longitude - longitude) <
-                        1]
+    return_dogs_next = [dog for dog in return_dogs if abs(dog[1].longitude - longitude) < 1]
     return {"dogs": return_dogs_next}
 
 
