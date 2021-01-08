@@ -32,7 +32,9 @@ name: "Form",
     breed: '',
     chip_number: null,
     description: "",
-    file: null
+    file: null,
+    address: "",
+    center: null
   }
   },
   methods: {
@@ -56,8 +58,9 @@ name: "Form",
        console.log(dogReport);
        this.sendImageToServer(data).then((response =>{
          dogReport['url'] = response;
-         this.addReport(dogReport);
-       }))
+         this.addReport(dogReport).then((response => {
+           this.$router.push({name: "LocalMap", params: {address: this.address, center: this.center}})}));
+       }));
 
        this.breed = '';
        this.chip_number = null;
@@ -81,7 +84,6 @@ name: "Form",
     },
     async addReport(report){
       try{
-        console.log(this.center);
         report['status'] = 'HOMELESS';
         report['location'] = this.center;
         var reportStringified = JSON.stringify(report);
@@ -95,7 +97,9 @@ name: "Form",
       }
     }
  },
-  mounted(){
+  mounted() {
+    this.center = this.$route.params.center;
+    this.address = this.$route.params.address;
     console.log(this.center);
   }
 }

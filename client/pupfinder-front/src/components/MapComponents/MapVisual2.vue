@@ -12,8 +12,6 @@
               <button @click="locatorButtonPressed"></button>
     </div>
     <button @click="pushRoute"></button>
-
-    <Form v-if="showComponent" @report-submitted="addReport"></Form>
   </div>
 </template>
 <script>
@@ -34,7 +32,6 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import axios from 'axios'
-import Form from "../Form/Form.vue";
 
 const myCustomColour = '#247510'
 
@@ -60,7 +57,6 @@ const icon = L.divIcon({
 
 export default {
   components: {
-    Form,
     LMap,
     LIcon,
     LTileLayer,
@@ -76,7 +72,7 @@ export default {
     return {
       zoom: 2,
       address: this.address,
-     center: this.locCenter
+     center: [52.237049, 21.017532]
     };
   },
   computed: {
@@ -86,8 +82,8 @@ export default {
   },
   methods: {
     setupLeafletMap() {
-      console.log(this.$center);
-      this.mapDiv = L.map("mapDiv").setView(this.$center, 13);
+      console.log(this.config.globalProperties.$center);
+      this.mapDiv = L.map("mapDiv").setView(this.config.globalProperties.$center, 13);
       L.tileLayer(
           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
           {
@@ -98,8 +94,8 @@ export default {
       ).addTo(this.mapDiv);
       this.getDogsInArea();
       this.mapDiv.on("click", function (e) {
-        this.locCenter = [e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5)]
-        console.log(this.locCenter);
+        app.config.globalProperties.$center = [e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5)];
+        console.log(app.config.globalProperties.$center);
         }
       )
     },
@@ -109,16 +105,16 @@ export default {
             position => {
               console.log(position.coords.latitude);
               console.log(position.coords.longitude);
-              this.locCenter = [position.coords.latitude, position.coords.longitude];
-              this.onCenter(this.locCenter);
+              app.config.globalProperties.$center = [position.coords.latitude, position.coords.longitude];
+              this.onCenter(app.config.globalProperties.$center);
             },
             error => {
               console.log(error.message);
             },
         )
       } else {
-        this.locCenter = await this.getStreetAddressFrom(this.address);
-        this.onCenter(this.locCenter);
+        app.config.globalProperties.$center = await this.getStreetAddressFrom(this.address);
+        this.onCenter(app.config.globalProperties.$center);
       }
     },
     async getStreetAddressFrom(text) {
@@ -144,22 +140,10 @@ export default {
       }
     },
     pushRoute: function () {
-      this.$router.push({name: "ReportPuppy",
-        params: {address: this.address, center: this.locCenter}});
-    },
-    async addReport(report){
-      try{
-        report['status'] = 'HOMELESS';
-        report['location'] = this.locCenter;
-        var reportStringified = JSON.stringify(report);
-        console.log(reportStringified);
-        var {data} = axios.post('http://localhost:8000/api/dogs/', reportStringified, {headers: {
-    'Content-Type': 'application/json'}}).then(function (response) {
-            console.log(response);
-          });
-      } catch(error){
-        console.log(error.message);
-      }
+      this.$router.push({
+        name: "ReportPuppy",
+        params: {address: this.address, center: app.config.globalProperties.$center}
+      });
     },
     placePupups(dogs) {
         this.dogsInArea = dogs;
@@ -181,8 +165,10 @@ export default {
     },
     async getDogsInArea() {
       try {
+        console.log(app.config.globalProperties.$center);
         var response = await axios.get('http://localhost:8000/api/dogs/',
-            {params: {latitude: this.locCenter[0], longitude: this.locCenter[1]}});
+            {params: {latitude: app.config.globalProperties.$center[0],
+                longitude: app.config.globalProperties.$center[1]}});
         this.placePupups(response.data.dogs);
       } catch (error) {
         console.log(error.message);
@@ -195,9 +181,13 @@ export default {
     },
   },
   mounted(){
-    if(typeof(this.locCenter) == "undefined") {
-      this.locCenter = [52.237049, 21.017532];
-  }
+    if(typeof(this.$route.params.center)!="undefined"){
+      app.config.globalProperties.$center = this.$route.params.center;
+      this.address = this.$route.params.address;
+    }
+    /*if(typeof(app.config.globalProperties.$center) == "undefined") {
+      app.config.globalProperties.$center = [52.237049, 21.017532];
+  }*/
    this.setupLeafletMap();
    this.address = this.address || "";
    var dogsInArea = [];
