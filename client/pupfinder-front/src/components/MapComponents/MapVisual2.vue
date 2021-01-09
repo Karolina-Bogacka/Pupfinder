@@ -8,7 +8,14 @@
 
       <ul>
         <li v-for="dog in dogsInArea" :key="dog.dog_id">
-            <LMarker :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:mouseover="showPup(dog)"></LMarker>
+            <LMarker :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:click="showPup(dog)">
+              <LPopup>
+                <img :src="dog.url"/>
+                {{dog.breed}} Nr {{dog.id}}
+                {{dog.chip_number}}
+                {{dog.description}}
+              </LPopup>
+            </LMarker>
         </li>
       </ul>
 
@@ -175,7 +182,14 @@ export default {
           }
           var id = dogs[i][0]['dog_id'];
           var place = [dogs[i][1].latitude, dogs[i][1].longitude];
-          this.dogsInArea[dogs[i][0]['dog_id']] = {options: markerOptions, place: place, id:id};
+          //var url = dogs[i][2]['photo_url'] || "";
+          var url = "http://localhost:8000/api/dogs/photo/"+id.toString()
+          var description = dogs[i][0]['description'];
+          var breed = dogs[i][0]['breed'];
+          var chip_number = dogs[i][0]['chip_number'];
+          console.log(url);
+          this.dogsInArea[dogs[i][0]['dog_id']] = {options: markerOptions, place: place, id:id, url:url,
+            description: description, breed: breed, chip_number:chip_number};
       }}
     },
     async getDogsInArea(center) {

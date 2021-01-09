@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, UploadFile, File
 import shutil
 import uuid
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, StreamingResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 import models
@@ -46,7 +46,8 @@ async def read_item(request: Request, id: str):
 @app.get("/api/dogs/")
 async def get_in_location(latitude: float, longitude: float):
     db = next(get_db())
-    dogs = db.query(Dog, Sighting).filter(Dog.dog_id == Sighting.dog_id).all()
+    dogs = db.query(Dog, Sighting, Photo).filter(Dog.dog_id == Sighting.dog_id)\
+        .filter(Dog.dog_id == Photo.subject_id).all()
     return_dogs = [dog for dog in dogs if abs(dog[1].latitude - latitude) < 1]
     return_dogs_next = [dog for dog in return_dogs if abs(dog[1].longitude - longitude) < 1]
     return {"dogs": return_dogs_next}
@@ -54,7 +55,10 @@ async def get_in_location(latitude: float, longitude: float):
 
 @app.get("/api/dogs/photo/{dog_id}")
 async def get_photo_of_dog(dog_id: int):
-    pass
+    db = next(get_db())
+    photo = db.query(Photo).filter(Photo.subject_id == dog_id).first()
+    file_like = open(photo.photo_url, mode="rb")
+    return StreamingResponse(file_like, media_type="image/png")
 
 
 @app.post("/api/dogs/")
