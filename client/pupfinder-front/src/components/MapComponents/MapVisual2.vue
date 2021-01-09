@@ -3,24 +3,17 @@
     <fieldset>
       <h3></h3>
     <div style="height: 80vh">
-    <LMap  class="map" @ready="onReady" @locationfound="onLocationFound"  @click="changeCenter" :zoom="zoom" :center="center">
+    <l-map ref="map" class="map" @ready="onReady" @locationfound="onLocationFound"  @click="changeCenter" :zoom="zoom" :center="center">
       <LTileLayer :url="url"></LTileLayer>
-
-      <ul>
-        <li v-for="dog in dogsInArea" :key="dog.dog_id">
-            <LMarker :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:click="showPup(dog)">
-              <LPopup>
+            <LMarker v-for="dog in dogsInArea" @mouseover="$event.target.openPopup()" :key="dog.dog_id" :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:click="showPup(dog)" :ref="markers">
+              <LPopup :visible=dog.visible>
                 <img :src="dog.url"/>
                 {{dog.breed}} Nr {{dog.id}}
                 {{dog.chip_number}}
                 {{dog.description}}
               </LPopup>
             </LMarker>
-        </li>
-      </ul>
-
-
-    </LMap>
+    </l-map>
 
   </div>
     <div class="ui right icon">
@@ -36,6 +29,9 @@
     </div>
     <button @click="pushRoute" class="bg-blue-500 text-white font-bold rounded">Report a lost pupper</button>
     </fieldset>
+    <div v-for="dog in dogsInArea" v-bind:key="dog.dog_id">
+      <button v-on:click="showPup(dog)" :value="dog.breed">{{dog['id']}}</button>
+    </div>
   </div>
 </template>
 <script>
@@ -56,6 +52,11 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import axios from 'axios'
+import {
+  onBeforeUpdate,
+  reactive,
+  ref,
+} from 'vue';
 
 const myCustomColour = '#247510'
 
@@ -79,6 +80,10 @@ const icon = L.divIcon({
   html: `<span style="${markerHtmlStyles}" />`
 })
 
+const popups = ref([]);
+
+// Make sure to reset the refs before each update.
+
 export default {
   components: {
     LMap,
@@ -97,13 +102,26 @@ export default {
       zoom: 15,
       address: this.address,
       center: [52.237049, 21.017532],
-      dogsInArea: {}
+      dogsInArea: {},
+      markers: []
     };
   },
   computed: {
     showComponent(){
       return true;
     }
+  },
+  setup() {
+    const markers = ref([]);
+
+    // Make sure to reset the refs before each update.
+    onBeforeUpdate(() => {
+      markers.value = [];
+    });
+
+    return {
+     markers,
+    };
   },
   methods: {
     onReady (mapObject) {
@@ -121,7 +139,8 @@ export default {
       },
     showPup(dog){
       this.dog_id = parseInt(dog.id);
-      console.log(dog);
+      let index = "popups"+dog.id;
+      this.center = dog.place;
     },
     async locatorButtonPressed() {
       if (this.address === "" || !this.address) {
@@ -182,14 +201,13 @@ export default {
           }
           var id = dogs[i][0]['dog_id'];
           var place = [dogs[i][1].latitude, dogs[i][1].longitude];
-          //var url = dogs[i][2]['photo_url'] || "";
           var url = "http://localhost:8000/api/dogs/photo/"+id.toString()
           var description = dogs[i][0]['description'];
           var breed = dogs[i][0]['breed'];
           var chip_number = dogs[i][0]['chip_number'];
           console.log(url);
           this.dogsInArea[dogs[i][0]['dog_id']] = {options: markerOptions, place: place, id:id, url:url,
-            description: description, breed: breed, chip_number:chip_number};
+            description: description, breed: breed, chip_number:chip_number, visible:true};
       }}
     },
     async getDogsInArea(center) {
@@ -223,10 +241,6 @@ export default {
 </script>
 
 <style scoped>
-#mapDiv {
- width: 80vw;
- height: 80vh;
-}
 button{
   height: 5vh;
   background-color:green;
