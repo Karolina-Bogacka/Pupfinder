@@ -5,7 +5,7 @@
     <div style="height: 80vh">
     <l-map ref="map" class="map" @ready="onReady" @locationfound="onLocationFound"  @click="changeCenter" :zoom="zoom" :center="center">
       <LTileLayer :url="url"></LTileLayer>
-            <LMarker v-for="dog in dogsInArea" @mouseover="$event.target.openPopup()" :key="dog.dog_id" :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:click="showPup(dog)" :ref="markers">
+            <LMarker v-for="dog in dogsInArea" @mouseover="$event.target.openPopup()" :key="dog.dog_id" :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:click="showPup(dog)" :ref="`markers${dog.id}`">
               <LPopup :visible=dog.visible>
                 <img :src="dog.url"/>
                 {{dog.breed}} Nr {{dog.id}}
@@ -80,7 +80,6 @@ const icon = L.divIcon({
   html: `<span style="${markerHtmlStyles}" />`
 })
 
-const popups = ref([]);
 
 // Make sure to reset the refs before each update.
 
@@ -111,18 +110,6 @@ export default {
       return true;
     }
   },
-  setup() {
-    const markers = ref([]);
-
-    // Make sure to reset the refs before each update.
-    onBeforeUpdate(() => {
-      markers.value = [];
-    });
-
-    return {
-     markers,
-    };
-  },
   methods: {
     onReady (mapObject) {
       mapObject.locate();
@@ -139,7 +126,9 @@ export default {
       },
     showPup(dog){
       this.dog_id = parseInt(dog.id);
-      let index = "popups"+dog.id;
+      let index = `markers${dog.id}`;
+      console.log(this.$refs[index].leafletObject.openPopup());
+      this.$refs[index].leafletObject.openPopup();
       this.center = dog.place;
     },
     async locatorButtonPressed() {
