@@ -1,20 +1,39 @@
-from fastapi import FastAPI, Request, UploadFile, File
+import binascii
+import hashlib
+import os
+from typing import Optional
+from datetime import datetime, timedelta
+from fastapi import status, FastAPI, Request, UploadFile, File, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import shutil
 import uuid
+from jose import JWTError, jwt
+
+from passlib.context import CryptContext
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import HTMLResponse, StreamingResponse
+from starlette.responses import HTMLResponse, StreamingResponse, JSONResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 import models
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 from models.dog import Dog
+from models.owner import Owner
 from models.photo import Photo
 from models.sighting import Sighting
 from schemas.dogschema import DogSchema
+from schemas.owner import Token, OwnerSchema
+
+SECRET = "780231da30c57eaeb7e1c567a10345841007d40852f24c91937383666721382d"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 5
 
 models.Base.metadata.create_all(bind=models.engine)
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 templates = Jinja2Templates(directory="templates")
 app.add_middleware(
@@ -33,23 +52,87 @@ def get_db():
         models.db.close()
 
 
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_owner(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    db = next(get_db())
+    owner = db.query(Owner).filter(Owner.username == username).first()
+    if owner is None:
+        raise credentials_exception
+    return owner
+
+
+@app.post("/api/auth/token", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    db = next(get_db())
+    owner = db.query(Owner).filter(Owner.username == form_data.username).first()
+    print(form_data)
+    if not owner:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    if not verify_password(form_data.password, owner.password):
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": owner.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/api/owners/")
+async def create_owner(owner: OwnerSchema):
+    db = next(get_db())
+    length_owner = db.query(Owner).count()
+    hashed_password = get_password_hash(owner.password)
+    owner_model = Owner(owner_id=length_owner+1, email=owner.email,
+                     password=hashed_password,username=owner.username)
+    db.add(owner_model)
+    db.commit()
+    db.refresh(owner_model)
+    return {"owner": owner_model.username}
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/items/{id}", response_class=HTMLResponse)
-async def read_item(request: Request, id: str):
-    return templates.TemplateResponse("main-map.html", {"request": request, "id": id})
-
-
 @app.get("/api/dogs/")
 async def get_in_location(latitude: float, longitude: float):
     db = next(get_db())
-    dogs = db.query(Dog, Sighting, Photo).filter(Dog.dog_id == Sighting.dog_id)\
+    dogs = db.query(Dog, Sighting, Photo).filter(Dog.dog_id == Sighting.dog_id) \
         .filter(Dog.dog_id == Photo.subject_id).all()
     return_dogs = [dog for dog in dogs if abs(dog[1].latitude - latitude) < 1]
-    return_dogs_next = [dog for dog in return_dogs if abs(dog[1].longitude - longitude) < 1]
+    return_dogs_next = [dog for dog in return_dogs if
+                        abs(dog[1].longitude - longitude) < 1]
     return {"dogs": return_dogs_next}
 
 
