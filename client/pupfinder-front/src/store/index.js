@@ -43,7 +43,6 @@ const store =  createStore({
         })
         .catch(err => {
           commit('auth_error', err)
-          localStorage.removeItem('token')
           reject(err)
         })
       })
