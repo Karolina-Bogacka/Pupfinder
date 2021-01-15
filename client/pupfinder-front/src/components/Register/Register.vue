@@ -24,8 +24,11 @@
 
       <div>
           <button type="submit">Register</button>
+          <router-link class="btn btn-info" to="/login">Cancel</router-link>
+          <router-link class="btn btn-info" to="/">Home</router-link>
       </div>
     </form>
+    <h4>{{message}}</h4>
   </div>
 </template>
 
@@ -37,23 +40,23 @@ export default {
       username: "",
       email: "",
       password: "",
-      password_confirmation: ""
+      password_confirmation: "",
+      message: ""
     }
   },
   methods: {
       register: function () {
-        console.log(this.password);
-        console.log(this.password_confirmation);
         if(this.password === this.password_confirmation){
         let data = {
           username: this.username,
           email: this.email,
           password: this.password
         }
-        this.$store.dispatch('register', data)
-       .then(() => this.$router.push('/'))
-       .catch(err => console.log(err))
-      }}
+        this.$store.dispatch('register', data);
+        this.$router.push('/login');
+      }else{
+        this.message = "Confirm Password!";
+    }}
     }
 }
 </script>

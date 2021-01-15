@@ -13,6 +13,7 @@
       <div class="form-group">
         <input type="submit" class="btn btn-success" value="Login" />&nbsp;
         <router-link class="btn btn-info" to="/">Cancel</router-link>
+        <router-link class="btn btn-info" to="/register">Sign In</router-link>
       </div>
     </form>
     <h4>{{message}}</h4>
