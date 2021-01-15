@@ -26,25 +26,25 @@ class OwnerSchema(OwnerBase):
 
     @classmethod
     def as_form(
-            cls,
-            owner_id_: int = Form(None, alias="owner_id"),
-            username: str = Form(None),
-            address: str = Form(None),
-            longitude: float = Form(None),
-            latitude: float = Form(None),
-            description: str = Form(None),
-            status: str = Form(None),
-            dogs: List[DogSchema] = Form(None)
+        cls,
+        owner_id_: int = Form(None, alias="owner_id"),
+        username: str = Form(None),
+        address: str = Form(None),
+        longitude: float = Form(None),
+        latitude: float = Form(None),
+        description: str = Form(None),
+        status: str = Form(None),
+        dogs: List[DogSchema] = Form(None),
     ):
         return cls(
-            owner_id = owner_id_,
-            username = username,
-            address = address,
-            longitude = longitude,
-            latitude= latitude,
+            owner_id=owner_id_,
+            username=username,
+            address=address,
+            longitude=longitude,
+            latitude=latitude,
             description=description,
             status=status,
-            dogs=dogs
+            dogs=dogs,
         )
 
 

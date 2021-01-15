@@ -1,19 +1,17 @@
-import binascii
-import hashlib
-import os
-from typing import Optional
-from datetime import datetime, timedelta
-from fastapi import status, FastAPI, Request, UploadFile, File, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import shutil
 import uuid
-from jose import JWTError, jwt
+from datetime import datetime, timedelta
+from typing import Optional
 
+from fastapi import status, FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import HTMLResponse, StreamingResponse, JSONResponse
+from starlette.responses import StreamingResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+
 import models
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 from models.dog import Dog
@@ -112,27 +110,31 @@ async def create_owner(owner: OwnerSchema):
     db = next(get_db())
     length_owner = db.query(Owner).count()
     hashed_password = get_password_hash(owner.password)
-    owner_model = Owner(owner_id=length_owner+1, email=owner.email,
-                     password=hashed_password,username=owner.username)
+    owner_model = Owner(
+        owner_id=length_owner + 1,
+        email=owner.email,
+        password=hashed_password,
+        username=owner.username,
+    )
     db.add(owner_model)
     db.commit()
     db.refresh(owner_model)
     return {"owner": owner_model.username}
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
 @app.get("/api/dogs/")
 async def get_in_location(latitude: float, longitude: float):
     db = next(get_db())
-    dogs = db.query(Dog, Sighting, Photo).filter(Dog.dog_id == Sighting.dog_id) \
-        .filter(Dog.dog_id == Photo.subject_id).all()
+    dogs = (
+        db.query(Dog, Sighting, Photo)
+        .filter(Dog.dog_id == Sighting.dog_id)
+        .filter(Dog.dog_id == Photo.subject_id)
+        .all()
+    )
     return_dogs = [dog for dog in dogs if abs(dog[1].latitude - latitude) < 1]
-    return_dogs_next = [dog for dog in return_dogs if
-                        abs(dog[1].longitude - longitude) < 1]
+    return_dogs_next = [
+        dog for dog in return_dogs if abs(dog[1].longitude - longitude) < 1
+    ]
     return {"dogs": return_dogs_next}
 
 
@@ -150,15 +152,24 @@ async def create_dog(dog: DogSchema):
     length_dog = local.query(Dog).count()
     length_sight = local.query(Sighting).count()
     length_photo = local.query(Photo).count()
-    sighting = Sighting(sighting_id=length_sight + 1, dog_id=length_dog + 1,
-                        latitude=dog.location[0], longitude=dog.location[1])
-    dog_model = Dog(dog_id=length_dog + 1, breed=dog.breed, description=dog.description,
-                    status=dog.status)
+    sighting = Sighting(
+        sighting_id=length_sight + 1,
+        dog_id=length_dog + 1,
+        latitude=dog.location[0],
+        longitude=dog.location[1],
+    )
+    dog_model = Dog(
+        dog_id=length_dog + 1,
+        breed=dog.breed,
+        description=dog.description,
+        status=dog.status,
+    )
     local.add(dog_model)
     local.add(sighting)
     if dog.url:
-        photo = Photo(photo_id=length_photo + 1, subject_id=length_dog + 1,
-                      photo_url=dog.url)
+        photo = Photo(
+            photo_id=length_photo + 1, subject_id=length_dog + 1, photo_url=dog.url
+        )
         local.add(photo)
         local.commit()
         local.refresh(photo)

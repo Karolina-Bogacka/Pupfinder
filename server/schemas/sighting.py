@@ -7,15 +7,10 @@ class SightingSchema(BaseModel):
     latitude: float
 
     class Config:
-        orm_mode=True
+        orm_mode = True
 
     @classmethod
     def as_form(
-            cls,
-            longitude: float = Form(None),
-            latitude: float = Form(None),
+        cls, longitude: float = Form(None), latitude: float = Form(None),
     ):
-        return cls(
-            longitude=longitude,
-            latitude=latitude
-        )
+        return cls(longitude=longitude, latitude=latitude)

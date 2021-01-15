@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from models import Base
-from models.owner import Owner
+
 
 class Dog(Base):
     __tablename__ = "dogs"
@@ -13,4 +13,4 @@ class Dog(Base):
     description = Column(String(200))
     status = Column(String(100), nullable=False)
     owner_id = Column(Integer, ForeignKey("owners.owner_id"))
-    owner = relationship("Owner", backref='dogs')
+    owner = relationship("Owner", backref="dogs")

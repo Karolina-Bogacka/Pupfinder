@@ -1,14 +1,14 @@
 from enum import Enum
-from typing import List, Dict
+from typing import List
 
 from fastapi import Form
 from pydantic import BaseModel
 
 
 class DogStatus(Enum):
-    HOMELESS = 'HOMELESS'
-    SHELTERED = 'SHELTERED'
-    ADOPTED = 'ADOPTED'
+    HOMELESS = "HOMELESS"
+    SHELTERED = "SHELTERED"
+    ADOPTED = "ADOPTED"
 
 
 class DogSchema(BaseModel):
@@ -27,14 +27,14 @@ class DogSchema(BaseModel):
 
     @classmethod
     def as_form(
-            cls,
-            dog_id_: int = Form(None, alias="dog_id"),
-            chip_number: str = Form(None),
-            breed: str = Form(None),
-            description: str = Form(None),
-            status: str = Form(None),
-            owner_id: int = Form(None),
-            url: str = Form(None)
+        cls,
+        dog_id_: int = Form(None, alias="dog_id"),
+        chip_number: str = Form(None),
+        breed: str = Form(None),
+        description: str = Form(None),
+        status: str = Form(None),
+        owner_id: int = Form(None),
+        url: str = Form(None),
     ):
         return cls(
             dog_id=dog_id_,
@@ -43,5 +43,5 @@ class DogSchema(BaseModel):
             description=description,
             status=status,
             owner_id=owner_id,
-            url=url
+            url=url,
         )
