@@ -16,7 +16,7 @@ const store =  createStore({
     clearError: (state) => state.error = "",
     setToken: (state, model) => {
       state.token = model.token;
-      state.expiration = new Date(model.expiration)
+      state.expiration = model.exp*1000;
     },
     clearToken: (state) => {
       state.token = "";
@@ -27,6 +27,27 @@ const store =  createStore({
     isAuthenticated: (state) => state.token.length > 0 && state.expiration > Date.now()
   },
   actions: {
+    register({commit}, owner){
+      return new Promise((resolve, reject) => {
+        commit('auth_request')
+        var owner_json = JSON.stringify(owner);
+        axios({url: 'http://localhost:8000/api/owners/', data: owner_json, method: 'POST' , headers: {
+            'Content-Type': 'application/json'}})
+        .then(resp => {
+          const token = resp.data.token
+          const user = resp.data.user
+          this.setItem('token', token)
+          axios.defaults.headers.common['Authorization'] = token
+          commit('auth_success', token, user)
+          resolve(resp)
+        })
+        .catch(err => {
+          commit('auth_error', err)
+          localStorage.removeItem('token')
+          reject(err)
+        })
+      })
+    },
     login: async ({ commit }, model) => {
       /*try {
         var report = JSON.stringify(model);

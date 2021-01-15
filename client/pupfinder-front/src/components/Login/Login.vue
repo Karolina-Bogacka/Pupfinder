@@ -20,7 +20,7 @@
 </template>
 
 <script>
-  import { reactive } from "vue";
+
   import store from "../../store";
   import axios from "axios";
   import router from "../../router";
@@ -61,8 +61,12 @@
             'Content-Type': 'application/x-www-form-urlencoded'}});
         console.log(result);
         if (result.data) {
-          store.commit("setToken", result.data.access_token);
-          router.push("/");
+          var data = JSON.parse(atob(result.data.access_token.split('.')[1]));
+          data['token'] = result.data.access_token;
+          store.commit("setToken", data);
+          await router.push("/");
+          console.log(data.exp*1000);
+          console.log(Date.now());
         } else {
           store.commit("setError", "Authentication Failed");
         }
