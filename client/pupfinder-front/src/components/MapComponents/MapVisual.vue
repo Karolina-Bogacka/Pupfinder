@@ -1,13 +1,23 @@
 <template>
-  <div class="MapContainer">
+  <div class="h-screen w-screen flex">
+	<!-- container -->
+
+	 <div class="flex-1 flex overflow-hidden">
+    <!-- Scrollable container -->
+    <div class="flex-1 overflow-y-scroll">
+    <div v-for="dog in dogsInArea" v-bind:key="dog.dog_id">
+      <button v-on:click="showPup(dog)" :value="dog.breed">{{dog['id']}}</button>
+    </div>
+  </div>
+     </div>
+  <div class="MapContainer" >
     <fieldset>
-      <h3></h3>
-    <div style="height: 80vh">
-    <l-map ref="map" class="map" @ready="onReady" @locationfound="onLocationFound"  @click="changeCenter" :zoom="zoom" :center="center">
+    <div>
+    <l-map style="min-height: 70vh" ref="map"  @ready="onReady" @locationfound="onLocationFound"  @click="changeCenter" :zoom="zoom" :center="center">
       <LTileLayer :url="url"></LTileLayer>
             <LMarker v-for="dog in dogsInArea" @mouseover="$event.target.openPopup()" :key="dog.dog_id" :lat-lng="dog.place" :options="dog.options" :id="dog.id" v-on:click="showPup(dog)" :ref="`markers${dog.id}`">
               <LPopup :visible=dog.visible>
-                <img :src="dog.url"/>
+                <img :src="returnURL(dog)"/>
                 {{dog.breed}} Nr {{dog.id}}
                 {{dog.chip_number}}
                 {{dog.description}}
@@ -29,9 +39,7 @@
     </div>
     <button @click="pushRoute" class="bg-blue-500 text-white font-bold rounded">Report a lost pupper</button>
     </fieldset>
-    <div v-for="dog in dogsInArea" v-bind:key="dog.dog_id">
-      <button v-on:click="showPup(dog)" :value="dog.breed">{{dog['id']}}</button>
-    </div>
+  </div>
   </div>
 </template>
 <script>
@@ -52,11 +60,6 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import axios from 'axios'
-import {
-  onBeforeUpdate,
-  reactive,
-  ref,
-} from 'vue';
 
 const myCustomColour = '#247510'
 
@@ -79,9 +82,6 @@ const icon = L.divIcon({
   popupAnchor: [0, -36],
   html: `<span style="${markerHtmlStyles}" />`
 })
-
-
-// Make sure to reset the refs before each update.
 
 export default {
   components: {
@@ -114,6 +114,9 @@ export default {
     onReady (mapObject) {
       mapObject.locate();
     },
+    returnURL(dog){
+      return dog.url;
+    },
       onLocationFound(location){
       console.log(location);
     },
@@ -135,8 +138,6 @@ export default {
       if (this.address === "" || !this.address) {
         navigator.geolocation.getCurrentPosition(
             position => {
-              console.log(position.coords.latitude);
-              console.log(position.coords.longitude);
               this.center = [position.coords.latitude, position.coords.longitude];
               this.onCenter(this.center);
             },
@@ -151,7 +152,7 @@ export default {
     },
     async getStreetAddressFrom(text) {
       try {
-        var {data} = await axios.get(
+        let {data} = await axios.get(
             "https://api.geoapify.com/v1/geocode/search?", {params: {text: text, api_key:'5caffdbbde8941d48cddb778ded141f7', limit:'1' }});
         if (data.error_message) {
           console.log(data.error_message)
@@ -165,7 +166,7 @@ export default {
     },
     async getFromCenter(latitude, longitude) {
       try {
-        var {data} = await axios.get(
+        let {data} = await axios.get(
             "https://api.geoapify.com/v1/geocode/reverse?", {params: {lat:latitude, lon:longitude, api_key:'5caffdbbde8941d48cddb778ded141f7', limit:'1' }});
       } catch (error) {
         console.log(error.message);
@@ -182,26 +183,25 @@ export default {
           console.log(dogs);
         var i = 0;
         for (i; i < dogs.length; i++) {
-          var markerOptions = {
+          let markerOptions = {
             title: dogs[i][0]['dog_id'],
             icon: icon,
             clickable: true,
             draggable: false
           }
-          var id = dogs[i][0]['dog_id'];
-          var place = [dogs[i][1].latitude, dogs[i][1].longitude];
-          var url = "http://localhost:8000/api/dogs/photo/"+id.toString()
-          var description = dogs[i][0]['description'];
-          var breed = dogs[i][0]['breed'];
-          var chip_number = dogs[i][0]['chip_number'];
-          console.log(url);
+          let id = dogs[i][0]['dog_id'];
+          let place = [dogs[i][1].latitude, dogs[i][1].longitude];
+          let url = "http://localhost:8000/api/dogs/"+id.toString()+"/photo/"
+          let description = dogs[i][0]['description'];
+          let breed = dogs[i][0]['breed'];
+          let chip_number = dogs[i][0]['chip_number'];
           this.dogsInArea[dogs[i][0]['dog_id']] = {options: markerOptions, place: place, id:id, url:url,
             description: description, breed: breed, chip_number:chip_number, visible:true};
       }}
     },
     async getDogsInArea(center) {
       try {
-        var response = await axios.get('http://localhost:8000/api/dogs/',
+        let response = await axios.get('http://localhost:8000/api/dogs/',
             {params: {latitude: center[0],
                 longitude: center[1]}});
         this.placePupups(response.data.dogs);

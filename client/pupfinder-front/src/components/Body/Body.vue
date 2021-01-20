@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import MapVisual2 from './../MapComponents/MapVisual2.vue'
+import MapVisual2 from '../MapComponents/MapVisual.vue'
 export default {
   components :{
     MapVisual2,

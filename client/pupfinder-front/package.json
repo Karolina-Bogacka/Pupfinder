@@ -26,8 +26,13 @@
     "@tailwindcss/postcss7-compat": "^2.0.2",
     "@vue/compiler-sfc": "^3.0.5",
     "autoprefixer": "^9.8.6",
+    "eslint": "^7.18.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-config-strongloop": "^2.1.0",
+    "eslint-plugin-vue": "^7.0.0-beta.4",
     "jsonwebtoken": "^8.5.1",
     "postcss": "^7.0.35",
+    "prettier": "^2.2.1",
     "sass": "^1.32.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.2",
     "vite": "^1.0.0-rc.13"

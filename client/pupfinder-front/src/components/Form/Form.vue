@@ -50,23 +50,26 @@ name: "Form",
        alert('Review is incomplete. Please fill out every field.');
        return
      } else {
-       var data = new FormData();
+       let data = new FormData();
        if(this.file) {
          data.append('file', this.file);
        }
-       var dogReport = {
+       let dogReport = {
          breed: this.breed,
          chip_number: this.chip_number,
          description: this.description,
        }
-       console.log(data.entries().next().done);
        if(data.entries().next().done){
+         console.log("in");
          this.addReport(dogReport).then((response => {
              this.$router.push({name: "LocalMap", params: {address: this.address, center: this.center}})
            }));
        }else {
          this.sendImageToServer(data).then((response => {
-           dogReport['url'] = response;
+           if(response && response!=="") {
+             dogReport['url'] = response;
+             console.log("in");
+           }
            this.addReport(dogReport).then((response => {
              this.$router.push({name: "LocalMap", params: {address: this.address, center: this.center}})
            }));
@@ -80,12 +83,10 @@ name: "Form",
    },
     async sendImageToServer(data){
       try {
-        console.log(data);
-        var response = await axios.post('http://localhost:8000/api/photo-upload/', data,
+        let response = await axios.post('http://localhost:8000/api/photo/', data,
             {headers:{
               'Content-Type': 'multipart/form-data'
             }});
-        console.log(response.data['file_name']);
         return response.data['file_name'];
 
       } catch (error) {
@@ -97,9 +98,8 @@ name: "Form",
       try{
         report['status'] = 'HOMELESS';
         report['location'] = this.center;
-        var reportStringified = JSON.stringify(report);
-        console.log(reportStringified);
-        var {data} = axios.post('http://localhost:8000/api/dogs/', reportStringified, {headers: {
+        let reportStringified = JSON.stringify(report);
+        let {data} = axios.post('http://localhost:8000/api/dogs/', reportStringified, {headers: {
     'Content-Type': 'application/json'}}).then(function (response) {
             console.log(response);
           });
@@ -111,7 +111,6 @@ name: "Form",
   mounted() {
     this.center = this.$route.params.center;
     this.address = this.$route.params.address;
-    console.log(this.center);
   }
 }
 </script>

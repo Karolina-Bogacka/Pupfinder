@@ -1,8 +1,8 @@
-## PUPFINDER
+![PUPFINDER](./client/pupfinder-front/src/assets/PUPFINDER.png)
 
 ### A revolutionary solution for dog shelters and stalkers
 
-Have you ever seen a cute dog on the street and thought "Man, I wish I could take you home"?
+Have you ever seen a cute dog on the street and thought "Man, I wish I could just take it home"?
 Well, now you can!
 
 Our powerful service allows you to instantly check your neighborhood for any reported homeless dogs, wherever you are, 

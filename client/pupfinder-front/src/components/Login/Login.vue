@@ -1,22 +1,31 @@
 <template>
   <div>
-    <h1>Login</h1>
-    <form novalidate @submit.prevent="onSubmit()">
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" v-model="username" class="form-control" />
+    <div class="grid max-h-screen place-items-center">
+    <form novalidate @submit.prevent="onSubmit()" class="w-11/12 p-12 bg-white sm:w-8/12 md:w-1/2 lg:w-5/12">
+      <h1 class="text-xl font-semibold">Login</h1>
+      <div class="flex justify-between gap-3">
+      <span class="w-1/2">
+        <label class="block mt-2 text-xs font-semibold text-gray-600 uppercase" for="username">Username</label>
+        <input class="block w-full p-3 mt-2 text-grey-500 bg-yellow-200 appearance-none focus:outline-none focus:bg-yellow-300 focus:shadow-inner" type="text" id="username" v-model="username" />
+      </span>
+      <span class="w-1/2">
+        <label class="block mt-2 text-xs font-semibold text-gray-600 uppercase" for="password">Password</label>
+        <input class="block w-full p-3 mt-2 text-grey-500 bg-yellow-200 appearance-none focus:outline-none focus:bg-yellow-300 focus:shadow-inner" type="password" id="password" v-model="password"/>
+      </span>
       </div>
       <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" v-model="password" class="form-control" />
+        <input class="w-full py-3 mt-6 font-medium tracking-widest text-white uppercase bg-green shadow-lg focus:outline-none hover:bg-green-800 hover:shadow-none" type="submit" value="Login" />&nbsp;
+      </div>
+        <div class="form-group">
+        <router-link class="w-full py-3 mt-6 font-medium tracking-widest text-white uppercase bg-green shadow-lg focus:outline-none hover:bg-red-800 hover:shadow-none" to="/">Cancel</router-link>
+        <router-link class="w-full py-3 mt-6 font-medium tracking-widest text-white uppercase bg-green shadow-lg focus:outline-none hover:bg-yellow-300 hover:shadow-none" to="/register">Sign In</router-link>
       </div>
       <div class="form-group">
-        <input type="submit" class="btn btn-success" value="Login" />&nbsp;
-        <router-link class="btn btn-info" to="/">Cancel</router-link>
-        <router-link class="btn btn-info" to="/register">Sign In</router-link>
+        <br/>
+        <h4 class="text-xl font-semibold">{{message}}</h4>
       </div>
     </form>
-    <h4>{{message}}</h4>
+  </div>
   </div>
 </template>
 

@@ -27,7 +27,6 @@ export default {
   components: {
   }
 }
-//background-image: url("./assets/PUPFINDER.png");
 </script>
 
 <style>
