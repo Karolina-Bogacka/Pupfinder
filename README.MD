@@ -38,4 +38,35 @@ The spot you have chosen can also be used to report a puppy. However, in order t
 - FastAPI,
 - MySQL
 
+### Available API Endpoints
+
+#### POST /api/auth/token/
+
+An endpoint necessary for authentication. 
+Takes as parameter form data compliant with OAuth2PasswordRequestFormat, as defined by FastAPI, and returns a valid token with a predefined expiration date, after which another authentication will be necessary. Returns 400 in case of unsuccessful authentication.
+
+#### POST /api/owners/
+
+An endpoint set up to create a new owner after registration. Accepts form data compliant with registration data and creates a new user with appropriate credentials. Returns new model username as a proof of successful transaction. After this action, the new user will be able to log in under provided here username and password.
+
+#### GET /api/dogs/
+
+Returns a list of all dogs in the viccinity of the provided location, as well as the list of their recent sightings.  
+
+#### POST /api/dogs/
+
+Accepts a form with the report of a new dog and adds the dog to the database, registering a new photo and sighting as well. Returns the dog and sighting models as proof.
+
+#### GET /api/dogs/{dog_id}/photo/
+
+Accepts a dog id as parameter and returns its photo from the database, if it exists, in the form of a streaming png file. 
+
+#### POST /api/photo/
+
+Accepts a provided photo file (in the format of UploadFile) and saves it on the backend, returning just url to the saved file (so that it can be later added to the database).
+
+
+![Components](./server/puppies/components.jpg)
+
+![AuthenticationFlow](./server/puppies/authflow.png)
 

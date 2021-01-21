@@ -69,14 +69,11 @@
         params.append('password', model.password)
         var result = await axios.post('http://localhost:8000/api/auth/token', params, {headers: {
             'Content-Type': 'application/x-www-form-urlencoded'}});
-        console.log(result);
         if (result.data) {
           var data = JSON.parse(atob(result.data.access_token.split('.')[1]));
           data['token'] = result.data.access_token;
           store.commit("setToken", data);
           await router.push("/");
-          console.log(data.exp*1000);
-          console.log(Date.now());
         } else {
           store.commit("setError", "Authentication Failed");
         }
